@@ -1,0 +1,11 @@
+{
+  "name": "Fluxen Sales",
+  "short_name": "Fluxen",
+  "start_url": "/fluxen-sales/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#E8630A",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
