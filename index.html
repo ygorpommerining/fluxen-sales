@@ -241,7 +241,7 @@ async function load() {
   setDot('load')
   try {
     const res = await Promise.all([
-      sbFetch('/leads?select=*&order=created_time.desc'),
+      sbFetch('/leads?select=*&order=created_time.desc&created_time=gte.2026-11-01T00:00:00Z'),
       sbFetch('/tarefas?select=*&order=data_hora.asc')
     ])
     leads = res[0] || []
