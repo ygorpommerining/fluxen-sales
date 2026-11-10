@@ -667,7 +667,7 @@ function renderTabela() {
   var rowsHtml = rows.length ? rows.map(function(l) {
     var v = l.valor ? 'R$ ' + Number(l.valor).toLocaleString('pt-BR', { minimumFractionDigits: 0 }) : '-'
     var dt = l.created_time ? new Date(l.created_time).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' }) : '-'
-    return '<tr>' +
+    return '<tr style="cursor:pointer" onclick="openDetail(\'' + esc(l.lead_id) + '\')">' +
       '<td><strong>' + esc(l.nome || '-') + '</strong></td>' +
       '<td>' + esc(l.telefone || '-') + '</td>' +
       '<td>' + esc(l.objetivo || '-') + '</td>' +
