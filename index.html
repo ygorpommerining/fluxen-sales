@@ -157,6 +157,8 @@ tr:hover td{background:var(--surface2)}
 .fchip{padding:4px 10px;font-size:11px;font-weight:700;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;transition:all .15s}
 .fchip.on{border-color:var(--accent);background:var(--accent-bg);color:var(--accent)}
 .fb-sel{padding:5px 8px;font-size:12px;color:var(--fg);background:var(--bg);border:1px solid var(--border);border-radius:6px;outline:none;max-width:170px}
+.pchip{padding:5px 12px;font-size:12px;font-weight:500;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;transition:all .15s}
+.pchip.on{border-color:var(--accent);background:var(--accent-bg);color:var(--accent);font-weight:600}
 .modal{background:var(--surface);border-radius:14px;padding:24px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:16px}
 .modal h2{font-weight:700;font-size:16px}
 .modal p{font-size:13px;color:var(--muted)}
@@ -217,7 +219,12 @@ tr:hover td{background:var(--surface2)}
 <div class="filterbar">
   <div class="fb-row">
     <div class="fb-group">
-      <span class="fb-label">Período</span>
+      <button class="pchip on" data-period="month"  onclick="setPeriod(this)">Este mês</button>
+      <button class="pchip"    data-period="30d"    onclick="setPeriod(this)">30 dias</button>
+      <button class="pchip"    data-period="7d"     onclick="setPeriod(this)">7 dias</button>
+      <button class="pchip"    data-period="custom" onclick="setPeriod(this)">Personalizado</button>
+    </div>
+    <div id="f-custom-dates" class="fb-group" style="display:none">
       <input type="date" id="f-from" class="fb-date" onchange="applyFilters()">
       <span class="fb-sep">–</span>
       <input type="date" id="f-to" class="fb-date" onchange="applyFilters()">
@@ -248,10 +255,32 @@ const H   = { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'appl
 
 let leads = [], tarefas = [], tab = 'kanban', drag = null, pendLead = null, wasDrag = false
 
-function curMonthStart() {
-  var n = new Date(); return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-01'
+function isoDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0')
 }
+function curMonthStart() { var n = new Date(); return isoDate(new Date(n.getFullYear(), n.getMonth(), 1)) }
+var currentPeriod = 'month'
 var activeFilters = { perfil: [], objetivo: '', credito: '', urgencia: '', dateFrom: curMonthStart(), dateTo: '' }
+
+function setPeriod(el) {
+  currentPeriod = el.dataset.period
+  document.querySelectorAll('.pchip').forEach(function(c){ c.classList.remove('on') })
+  el.classList.add('on')
+  var cd = document.getElementById('f-custom-dates')
+  var now = new Date()
+  if (currentPeriod === 'custom') {
+    cd.style.display = 'flex'
+    activeFilters.dateFrom = document.getElementById('f-from').value
+    activeFilters.dateTo   = document.getElementById('f-to').value
+  } else {
+    cd.style.display = 'none'
+    activeFilters.dateTo = ''
+    if      (currentPeriod === 'month') activeFilters.dateFrom = isoDate(new Date(now.getFullYear(), now.getMonth(), 1))
+    else if (currentPeriod === '30d')   activeFilters.dateFrom = isoDate(new Date(now - 30*864e5))
+    else if (currentPeriod === '7d')    activeFilters.dateFrom = isoDate(new Date(now - 7*864e5))
+  }
+  render()
+}
 
 function getFilteredLeads() {
   return leads.filter(function(l) {
@@ -267,8 +296,10 @@ function getFilteredLeads() {
 }
 
 function applyFilters() {
-  activeFilters.dateFrom = document.getElementById('f-from').value
-  activeFilters.dateTo   = document.getElementById('f-to').value
+  if (currentPeriod === 'custom') {
+    activeFilters.dateFrom = document.getElementById('f-from').value
+    activeFilters.dateTo   = document.getElementById('f-to').value
+  }
   activeFilters.objetivo = document.getElementById('f-objetivo').value
   activeFilters.credito  = document.getElementById('f-credito').value
   activeFilters.urgencia = document.getElementById('f-urgencia').value
@@ -284,7 +315,10 @@ function toggleChip(el) {
 }
 
 function clearFilters() {
+  currentPeriod = 'month'
   activeFilters = { perfil: [], objetivo: '', credito: '', urgencia: '', dateFrom: curMonthStart(), dateTo: '' }
+  document.getElementById('f-custom-dates').style.display = 'none'
+  document.querySelectorAll('.pchip').forEach(function(c){ c.classList.toggle('on', c.dataset.period === 'month') })
   document.getElementById('f-from').value     = activeFilters.dateFrom
   document.getElementById('f-to').value       = ''
   document.getElementById('f-objetivo').value = ''
