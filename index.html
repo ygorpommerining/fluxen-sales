@@ -304,6 +304,7 @@ tr:hover td{background:var(--surface2)}
     <button class="tab"     onclick="go('agenda')">Tarefas</button>
   </div>
   <div class="hdr-r">
+    <button class="btn-sm" id="btn-notif" onclick="ativarNotificacoes()" title="Ativar notificações">🔔</button>
     <button class="btn-sm" onclick="load()">↻</button>
     <div id="sdot" class="dot load"></div>
   </div>
@@ -851,8 +852,38 @@ async function requestPushPermission() {
   } catch(e) { console.warn('Push subscribe failed', e) }
 }
 
+async function ativarNotificacoes() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    toast('Notificações não suportadas neste navegador'); return
+  }
+  var perm = await Notification.requestPermission()
+  if (perm !== 'granted') { toast('Permissão negada'); return }
+  try {
+    var reg = await navigator.serviceWorker.ready
+    var sub = await reg.pushManager.getSubscription()
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToUint8(VAPID_PUBLIC) })
+    await savePushSub(sub)
+    document.getElementById('btn-notif').textContent = '🔔✓'
+    toast('✓ Notificações ativadas')
+  } catch(e) { toast('Erro ao ativar notificações'); console.error(e) }
+}
+
+async function checkNotifStatus() {
+  if (!('Notification' in window)) return
+  var btn = document.getElementById('btn-notif')
+  if (Notification.permission === 'granted') {
+    var reg = await navigator.serviceWorker.ready.catch(function(){ return null })
+    if (reg) {
+      var sub = await reg.pushManager.getSubscription().catch(function(){ return null })
+      if (sub) { btn.textContent = '🔔✓'; return }
+    }
+  }
+}
+
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/fluxen-sales/sw.js').catch(function(){})
+  navigator.serviceWorker.register('/fluxen-sales/sw.js')
+    .then(function(){ checkNotifStatus() })
+    .catch(function(){})
 }
 
 load()
