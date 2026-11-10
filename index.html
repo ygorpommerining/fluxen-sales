@@ -49,21 +49,24 @@ body{
 .hdr{
   position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
   background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:20px;
+  display:flex;align-items:center;flex-wrap:wrap;gap:0;
   padding:0 max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
 }
-.brand{font-weight:700;font-size:15px;padding:14px 0;white-space:nowrap}
-.brand-logo{height:30px;padding:6px 0;object-fit:contain}
+.brand{font-weight:700;font-size:15px;padding:10px 0;white-space:nowrap;margin-right:8px}
+.brand-logo{height:28px;padding:4px 0;object-fit:contain}
 .brand span{color:var(--accent)}
-.tabs{display:flex;gap:2px}
+.tabs{display:flex;gap:0;order:1;width:100%;border-top:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
 .tab{
-  padding:10px 16px;font-size:13px;font-weight:500;color:var(--muted);
+  flex:1;text-align:center;min-width:0;
+  padding:9px 10px;font-size:12px;font-weight:500;color:var(--muted);
   cursor:pointer;background:none;border:none;
   border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;
 }
 .tab:hover{color:var(--fg)}
 .tab.on{color:var(--accent);border-bottom-color:var(--accent)}
-.hdr-r{margin-left:auto;display:flex;align-items:center;gap:8px}
+.hdr-r{margin-left:auto;display:flex;align-items:center;gap:6px;padding:6px 0}
 .btn-sm{padding:5px 10px;font-size:12px;font-weight:500;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:6px;cursor:pointer}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .dot.ok{background:#10b981}
@@ -123,13 +126,12 @@ tr:hover td{background:var(--surface2)}
 
 @media(max-width:480px){
   body{font-size:15px}
-  .hdr{gap:0;padding:0 12px}
-  .brand{font-size:14px;padding:12px 0;margin-right:8px;white-space:nowrap}
-  .brand-logo{height:26px}
-  .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1}
-  .tabs::-webkit-scrollbar{display:none}
-  .tab{padding:12px 14px;font-size:13px;white-space:nowrap}
-  .hdr-r{gap:6px;flex-shrink:0}
+  .hdr{padding:0 12px}
+  .brand{font-size:13px;padding:8px 0;margin-right:6px}
+  .brand-logo{height:24px}
+  .tab{padding:10px 12px;font-size:12px}
+  .hdr-r{gap:4px}
+  .btn-sm{padding:6px 8px;font-size:12px}
   .btn-sm{padding:7px 10px;font-size:13px}
   .filter-panel{padding:14px 12px;gap:12px}
   .fb-row{gap:8px}
