@@ -550,7 +550,7 @@ function makeCard(l) {
     tel + obj +
     '<div class="cbot"><div class="cdate">' + dt +
     (val ? '<span class="cval">' + val + '</span>' : '') + '</div>' +
-    '<button class="ico" onclick="agendarPara(\'' + lid + '\')">📅</button></div></div>'
+    '<button class="ico" onclick="event.stopPropagation();agendarPara(\'' + lid + '\')">📅</button></div></div>'
 }
 
 function renderKanban() {
