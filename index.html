@@ -148,6 +148,15 @@ tr:hover td{background:var(--surface2)}
 .dfv{font-size:13px;color:var(--fg);margin-top:2px;word-break:break-word}
 .dsect{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:14px 0 6px;border-bottom:1px solid var(--border);margin-bottom:4px}
 .dwa{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:13px;font-weight:500;color:#fff;background:#25d366;border:none;border-radius:8px;cursor:pointer;text-decoration:none;margin-top:12px}
+.filterbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.fb-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fb-group{display:flex;align-items:center;gap:6px}
+.fb-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.fb-date{padding:5px 8px;font-size:12px;color:var(--fg);background:var(--bg);border:1px solid var(--border);border-radius:6px;outline:none}
+.fb-sep{font-size:12px;color:var(--muted)}
+.fchip{padding:4px 10px;font-size:11px;font-weight:700;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;transition:all .15s}
+.fchip.on{border-color:var(--accent);background:var(--accent-bg);color:var(--accent)}
+.fb-sel{padding:5px 8px;font-size:12px;color:var(--fg);background:var(--bg);border:1px solid var(--border);border-radius:6px;outline:none;max-width:170px}
 .modal{background:var(--surface);border-radius:14px;padding:24px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:16px}
 .modal h2{font-weight:700;font-size:16px}
 .modal p{font-size:13px;color:var(--muted)}
@@ -205,6 +214,26 @@ tr:hover td{background:var(--surface2)}
   </div>
 </div>
 
+<div class="filterbar">
+  <div class="fb-row">
+    <div class="fb-group">
+      <span class="fb-label">Período</span>
+      <input type="date" id="f-from" class="fb-date" onchange="applyFilters()">
+      <span class="fb-sep">–</span>
+      <input type="date" id="f-to" class="fb-date" onchange="applyFilters()">
+    </div>
+    <div class="fb-group">
+      <span class="fb-label">Perfil</span>
+      <button class="fchip" data-val="A" onclick="toggleChip(this)">A</button>
+      <button class="fchip" data-val="B" onclick="toggleChip(this)">B</button>
+      <button class="fchip" data-val="C" onclick="toggleChip(this)">C</button>
+    </div>
+    <select id="f-objetivo" class="fb-sel" onchange="applyFilters()"><option value="">Objetivo</option></select>
+    <select id="f-credito" class="fb-sel" onchange="applyFilters()"><option value="">Crédito</option></select>
+    <select id="f-urgencia" class="fb-sel" onchange="applyFilters()"><option value="">Prazo</option></select>
+    <button class="btn-sm" onclick="clearFilters()" style="margin-left:auto">Limpar filtros</button>
+  </div>
+</div>
 <div class="main">
   <div id="vk"></div>
   <div id="vt" hidden></div>
@@ -218,6 +247,69 @@ const EFN = SB + '/functions/v1/marcar-fechado'
 const H   = { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }
 
 let leads = [], tarefas = [], tab = 'kanban', drag = null, pendLead = null, wasDrag = false
+
+function curMonthStart() {
+  var n = new Date(); return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-01'
+}
+var activeFilters = { perfil: [], objetivo: '', credito: '', urgencia: '', dateFrom: curMonthStart(), dateTo: '' }
+
+function getFilteredLeads() {
+  return leads.filter(function(l) {
+    if (activeFilters.perfil.length && activeFilters.perfil.indexOf(l.perfil) < 0) return false
+    if (activeFilters.objetivo && l.objetivo !== activeFilters.objetivo) return false
+    if (activeFilters.credito  && l.credito  !== activeFilters.credito)  return false
+    if (activeFilters.urgencia && l.urgencia !== activeFilters.urgencia) return false
+    var ct = l.created_time
+    if (activeFilters.dateFrom && ct && ct < activeFilters.dateFrom) return false
+    if (activeFilters.dateTo   && ct && ct > activeFilters.dateTo + 'T23:59:59Z') return false
+    return true
+  })
+}
+
+function applyFilters() {
+  activeFilters.dateFrom = document.getElementById('f-from').value
+  activeFilters.dateTo   = document.getElementById('f-to').value
+  activeFilters.objetivo = document.getElementById('f-objetivo').value
+  activeFilters.credito  = document.getElementById('f-credito').value
+  activeFilters.urgencia = document.getElementById('f-urgencia').value
+  render()
+}
+
+function toggleChip(el) {
+  var val = el.dataset.val
+  var idx = activeFilters.perfil.indexOf(val)
+  if (idx >= 0) { activeFilters.perfil.splice(idx, 1); el.classList.remove('on') }
+  else           { activeFilters.perfil.push(val);     el.classList.add('on') }
+  render()
+}
+
+function clearFilters() {
+  activeFilters = { perfil: [], objetivo: '', credito: '', urgencia: '', dateFrom: curMonthStart(), dateTo: '' }
+  document.getElementById('f-from').value     = activeFilters.dateFrom
+  document.getElementById('f-to').value       = ''
+  document.getElementById('f-objetivo').value = ''
+  document.getElementById('f-credito').value  = ''
+  document.getElementById('f-urgencia').value = ''
+  document.querySelectorAll('.fchip').forEach(function(c){ c.classList.remove('on') })
+  render()
+}
+
+function populateFilterDropdowns() {
+  [
+    { id: 'f-objetivo', key: 'objetivo', label: 'Objetivo' },
+    { id: 'f-credito',  key: 'credito',  label: 'Crédito'  },
+    { id: 'f-urgencia', key: 'urgencia', label: 'Prazo'    },
+  ].forEach(function(f) {
+    var el = document.getElementById(f.id)
+    if (!el) return
+    var cur  = el.value
+    var vals = leads.map(function(l){ return l[f.key] }).filter(Boolean)
+    vals = vals.filter(function(v, i){ return vals.indexOf(v) === i }).sort()
+    el.innerHTML = '<option value="">' + f.label + '</option>' +
+      vals.map(function(v){ return '<option value="' + esc(v) + '">' + esc(slugToText(v)) + '</option>' }).join('')
+    el.value = cur
+  })
+}
 
 const ST = {
   novo:          { label: 'Novo lead',      color: '#3b82f6', sc: 'sn' },
@@ -241,11 +333,13 @@ async function load() {
   setDot('load')
   try {
     const res = await Promise.all([
-      sbFetch('/leads?select=*&order=created_time.desc&created_time=gte.2026-11-01T00:00:00Z'),
+      sbFetch('/leads?select=*&order=created_time.desc'),
       sbFetch('/tarefas?select=*&order=data_hora.asc')
     ])
     leads = res[0] || []
     tarefas = res[1] || []
+    document.getElementById('f-from').value = activeFilters.dateFrom
+    populateFilterDropdowns()
     render()
     setDot('ok')
   } catch(err) {
@@ -404,7 +498,7 @@ function renderKanban() {
   var html = '<div class="kanban">'
   Object.keys(ST).forEach(function(k) {
     var cfg = ST[k]
-    var col = leads.filter(function(l){ return l.status === k })
+    var col = getFilteredLeads().filter(function(l){ return l.status === k })
     html += '<div class="kcol">' +
       '<div class="khead"><div class="kdot" style="background:' + cfg.color + '"></div>' +
       '<div class="ktitle">' + cfg.label + '</div>' +
@@ -421,7 +515,7 @@ function renderTabela() {
   var q = ''
   var sq = document.getElementById('sq')
   if (sq) q = sq.value.toLowerCase()
-  var rows = leads.filter(function(l) {
+  var rows = getFilteredLeads().filter(function(l) {
     if (!q) return true
     return [l.nome, l.telefone, l.email].some(function(x){ return x && x.toLowerCase().indexOf(q) >= 0 })
   })
