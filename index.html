@@ -181,15 +181,15 @@ tr:hover td{background:var(--surface2)}
 </div>
 
 <div id="doverlay" class="moverlay" hidden onclick="if(event.target===this)closeDetail()">
-  <div class="mbox" style="max-width:440px;width:100%">
-    <div class="mh">
+  <div class="modal" style="max-width:440px;gap:0;padding:0;overflow:hidden">
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:20px 20px 16px;border-bottom:1px solid var(--border)">
       <div style="flex:1;min-width:0">
         <div id="d-nome" style="font-size:16px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
         <div id="d-badges" style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
       <button class="btns" onclick="closeDetail()" style="padding:6px 10px;flex-shrink:0">✕</button>
     </div>
-    <div id="d-body" style="padding:0 20px 20px;overflow-y:auto;max-height:60vh"></div>
+    <div id="d-body" style="padding:16px 20px 20px;overflow-y:auto;max-height:60vh"></div>
   </div>
 </div>
 <div class="hdr">
@@ -295,6 +295,12 @@ function field(label, value) {
   return '<div class="dfield"><div class="dfl">' + esc(label) + '</div><div class="dfv">' + esc(String(value)) + '</div></div>'
 }
 
+function slugToText(s) {
+  if (!s) return ''
+  var t = String(s).replace(/_/g, ' ')
+  return t.charAt(0).toUpperCase() + t.slice(1)
+}
+
 function openDetail(id) {
   if (wasDrag) return
   var l = leads.find(function(x){ return x.lead_id === id })
@@ -312,9 +318,9 @@ function openDetail(id) {
   if (l.email)    rows += field('E-mail', l.email)
 
   rows += '<div class="dsect">Interesse</div>'
-  if (l.objetivo) rows += field('Objetivo', l.objetivo)
-  if (l.credito)  rows += field('Faixa de crédito', l.credito)
-  if (l.urgencia) rows += field('Prazo', l.urgencia)
+  if (l.objetivo) rows += field('Objetivo', slugToText(l.objetivo))
+  if (l.credito)  rows += field('Faixa de crédito', slugToText(l.credito))
+  if (l.urgencia) rows += field('Prazo', slugToText(l.urgencia))
 
   rows += '<div class="dsect">Histórico</div>'
   if (l.created_time) rows += field('Entrada', new Date(l.created_time).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'}))
