@@ -453,7 +453,7 @@ async function sbFetch(path, opts) {
   opts = opts || {}
   const r = await fetch(SB + '/rest/v1' + path, Object.assign({}, opts, { headers: Object.assign({}, H, opts.headers || {}) }))
   if (!r.ok) { const e = await r.json().catch(function(){ return {} }); throw new Error(e.message || r.statusText) }
-  return r.status === 204 ? null : r.json()
+  return r.status === 204 || r.status === 201 ? null : r.json()
 }
 
 async function load() {
