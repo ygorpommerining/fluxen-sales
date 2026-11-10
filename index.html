@@ -1,5 +1,7 @@
 ﻿<title>Fluxen Sales</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 
 <style>
@@ -115,6 +117,59 @@ tr:hover td{background:var(--surface2)}
 /* Agenda */
 .agrid{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
 @media(max-width:720px){.agrid{grid-template-columns:1fr}.kcol{flex:0 0 254px}}
+
+@media(max-width:480px){
+  body{font-size:15px}
+  .hdr{gap:0;padding:0 12px}
+  .brand{font-size:14px;padding:12px 0;margin-right:8px;white-space:nowrap}
+  .brand-logo{height:26px}
+  .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{padding:12px 14px;font-size:13px;white-space:nowrap}
+  .hdr-r{gap:6px;flex-shrink:0}
+  .btn-sm{padding:7px 10px;font-size:13px}
+  .filterbar{padding:10px 12px}
+  .fb-row{gap:8px}
+  .fb-label{font-size:12px}
+  .fb-date,.fb-sel{font-size:14px;padding:7px 9px}
+  .fchip,.pchip{font-size:12px;padding:6px 12px}
+  .main{padding:12px}
+  .kcol{flex:0 0 82vw}
+  .card{padding:14px;gap:9px}
+  .cname{font-size:15px}
+  .ctel{font-size:14px}
+  .cobj{font-size:13px;padding:5px 10px}
+  .cdate{font-size:13px;gap:8px}
+  .cval{font-size:13px}
+  .pb{font-size:12px;padding:3px 9px}
+  .ico{padding:8px 10px;font-size:14px;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center}
+  .khead{padding:11px 14px}
+  .ktitle{font-size:14px}
+  .kcount{font-size:12px}
+  .modal{padding:20px;border-radius:16px}
+  .modal h2{font-size:18px}
+  .modal p{font-size:15px}
+  .fi,.fs{font-size:16px;padding:11px 12px}
+  textarea.fi{font-size:16px}
+  .fl{font-size:12px}
+  .btnp,.btns{font-size:15px;padding:12px 18px}
+  .dfield{padding:12px 0}
+  .dfl{font-size:12px}
+  .dfv{font-size:15px}
+  .tbar{padding:10px 12px}
+  .si{font-size:16px;padding:9px 12px;min-width:0;max-width:none;width:100%}
+  th{font-size:12px;padding:10px 10px}
+  td{font-size:14px;padding:12px 10px}
+  .spill{font-size:12px;padding:4px 10px}
+  .trow{padding:12px 14px;gap:14px}
+  .ttit{font-size:14px}
+  .tlead{font-size:13px}
+  .thora{font-size:13px}
+  .tck{width:22px;height:22px}
+  .ntcard{position:static;border-radius:12px}
+  .ntcard h3{font-size:16px}
+  .agrid{gap:16px}
+}
 .alist{display:flex;flex-direction:column;gap:12px}
 .aday{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .adayh{padding:9px 14px;font-weight:600;font-size:11px;color:var(--muted);background:var(--surface2);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.05em}
