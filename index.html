@@ -131,7 +131,7 @@ tr:hover td{background:var(--surface2)}
   .tab{padding:12px 14px;font-size:13px;white-space:nowrap}
   .hdr-r{gap:6px;flex-shrink:0}
   .btn-sm{padding:7px 10px;font-size:13px}
-  .filterbar{padding:10px 12px}
+  .filter-panel{padding:14px 12px;gap:12px}
   .fb-row{gap:8px}
   .fb-label{font-size:12px}
   .fb-date,.fb-sel{font-size:14px;padding:7px 9px}
@@ -206,7 +206,12 @@ tr:hover td{background:var(--surface2)}
 .dfv{font-size:13px;color:var(--fg);margin-top:2px;word-break:break-word}
 .dsect{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:14px 0 6px;border-bottom:1px solid var(--border);margin-bottom:4px}
 .dwa{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:13px;font-weight:500;color:#fff;background:#25d366;border:none;border-radius:8px;cursor:pointer;text-decoration:none;margin-top:12px}
-.filterbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.filter-panel{background:var(--surface);border-bottom:2px solid var(--accent);box-shadow:0 6px 20px rgba(0,0,0,.10);padding:16px max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+.filter-panel[hidden]{display:none!important}
+.fp-hdr{display:flex;align-items:center;justify-content:space-between}
+.fp-title{font-weight:700;font-size:14px}
+.fp-foot{display:flex;gap:8px;justify-content:flex-end;padding-top:4px;border-top:1px solid var(--border)}
+.btn-filter-active{background:var(--accent-bg)!important;color:var(--accent)!important;border-color:var(--accent)!important}
 .fb-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .fb-group{display:flex;align-items:center;gap:6px}
 .fb-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
@@ -304,13 +309,18 @@ tr:hover td{background:var(--surface2)}
     <button class="tab"     onclick="go('agenda')">Tarefas</button>
   </div>
   <div class="hdr-r">
+    <button class="btn-sm" id="btn-filter" onclick="toggleFilterPanel()" title="Filtros">⊟ Filtros</button>
     <button class="btn-sm" id="btn-notif" onclick="ativarNotificacoes()" title="Ativar notificações">🔔</button>
-    <button class="btn-sm" onclick="load()">↻</button>
+    <button class="btn-sm" onclick="load()" title="Atualizar">↻</button>
     <div id="sdot" class="dot load"></div>
   </div>
 </div>
 
-<div class="filterbar">
+<div id="filter-panel" class="filter-panel" hidden>
+  <div class="fp-hdr">
+    <span class="fp-title">Filtros</span>
+    <button class="btns" onclick="closeFilterPanel()" style="padding:4px 10px;font-size:13px">✕</button>
+  </div>
   <div class="fb-row">
     <div class="fb-group">
       <button class="pchip on" data-period="month"  onclick="setPeriod(this)">Este mês</button>
@@ -332,7 +342,10 @@ tr:hover td{background:var(--surface2)}
     <select id="f-objetivo" class="fb-sel" onchange="applyFilters()"><option value="">Objetivo</option></select>
     <select id="f-credito" class="fb-sel" onchange="applyFilters()"><option value="">Crédito</option></select>
     <select id="f-urgencia" class="fb-sel" onchange="applyFilters()"><option value="">Prazo</option></select>
-    <button class="btn-sm" onclick="clearFilters()" style="margin-left:auto">Limpar filtros</button>
+  </div>
+  <div class="fp-foot">
+    <button class="btns" onclick="clearFilters()">Limpar filtros</button>
+    <button class="btnp" onclick="closeFilterPanel()">Aplicar</button>
   </div>
 </div>
 <div class="main">
@@ -419,6 +432,7 @@ function clearFilters() {
   document.getElementById('f-credito').value  = ''
   document.getElementById('f-urgencia').value = ''
   document.querySelectorAll('.fchip').forEach(function(c){ c.classList.remove('on') })
+  updateFilterBadge()
   render()
 }
 
@@ -813,6 +827,26 @@ function go(t) {
   tabs.forEach(function(b, i) { b.classList.toggle('on', keys[i] === t) })
   ;['vk','vt','va'].forEach(function(id, i) { document.getElementById(id).hidden = keys[i] !== t })
   render()
+}
+
+function toggleFilterPanel() {
+  var p = document.getElementById('filter-panel')
+  var b = document.getElementById('btn-filter')
+  p.hidden = !p.hidden
+  b.classList.toggle('btn-filter-active', !p.hidden)
+}
+
+function closeFilterPanel() {
+  document.getElementById('filter-panel').hidden = true
+  document.getElementById('btn-filter').classList.remove('btn-filter-active')
+  updateFilterBadge()
+}
+
+function updateFilterBadge() {
+  var active = activeFilters.perfil.length > 0 || activeFilters.objetivo || activeFilters.credito || activeFilters.urgencia
+  var b = document.getElementById('btn-filter')
+  b.textContent = active ? '⊟ Filtros ●' : '⊟ Filtros'
+  b.classList.toggle('btn-filter-active', active)
 }
 
 function setDot(s) { document.getElementById('sdot').className = 'dot ' + s }
