@@ -236,7 +236,29 @@ tr:hover td{background:var(--surface2)}
 @keyframes rot{to{transform:rotate(360deg)}}
 .loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:60px;color:var(--muted);font-size:13px}
 .spin{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:rot .8s linear infinite}
+
+/* Login */
+#login-screen{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px 28px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:16px;align-items:center}
+.login-logo{width:72px;height:72px;object-fit:contain;border-radius:14px;margin-bottom:2px}
+.login-title{font-size:18px;font-weight:700;color:var(--fg)}
+.login-sub{font-size:13px;color:var(--muted);margin-top:-8px}
+.login-err{font-size:13px;color:#ef4444;text-align:center;padding:8px 12px;background:#fee2e2;border-radius:8px;width:100%}
+.login-box .fi{width:100%}
+.login-box .btnp{width:100%;padding:11px;font-size:14px}
 </style>
+
+<div id="login-screen">
+  <div class="login-box">
+    <img src="icon.png" class="login-logo" alt="Fluxen">
+    <div class="login-title">Fluxen Sales</div>
+    <div class="login-sub">Acesse sua conta</div>
+    <div id="login-err" class="login-err" hidden></div>
+    <input type="email" id="l-email" class="fi" placeholder="E-mail" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('l-pass').focus()">
+    <input type="password" id="l-pass" class="fi" placeholder="Senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btnp" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
 
 <div id="toast"></div>
 
@@ -314,6 +336,7 @@ tr:hover td{background:var(--surface2)}
     <button class="btn-sm" id="btn-filter" onclick="toggleFilterPanel()" title="Filtros">⊟ Filtros</button>
     <button class="btn-sm" id="btn-notif" onclick="ativarNotificacoes()" title="Ativar notificações">🔔</button>
     <button class="btn-sm" onclick="load()" title="Atualizar">↻</button>
+    <button class="btn-sm" onclick="logout()" title="Sair" style="color:var(--muted)">⏻</button>
     <div id="sdot" class="dot load"></div>
   </div>
 </div>
@@ -360,7 +383,78 @@ tr:hover td{background:var(--surface2)}
 const SB  = 'https://gflwotrnrhpkdpruvueu.supabase.co'
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmbHdvdHJucmhwa2RwcnV2dWV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxNzU0NjUsImV4cCI6MjEwOTc1MTQ2NX0.E44tLzbotB3DT9U2aaIWbOeHDeJqPGMqxHfmOYiulP0'
 const EFN = SB + '/functions/v1/marcar-fechado'
-const H   = { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }
+
+let session = null
+function getH() {
+  var tok = session ? session.access_token : KEY
+  return { apikey: KEY, Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' }
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────
+async function checkSession() {
+  try {
+    var raw = localStorage.getItem('fluxen_session')
+    if (raw) {
+      var s = JSON.parse(raw)
+      if (Date.now() / 1000 < (s.expires_at || 0) - 60) {
+        session = s; showApp(); return
+      }
+      if (s.refresh_token) {
+        var r = await fetch(SB + '/auth/v1/token?grant_type=refresh_token', {
+          method: 'POST',
+          headers: { apikey: KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: s.refresh_token })
+        })
+        if (r.ok) {
+          session = await r.json()
+          session.expires_at = Math.floor(Date.now() / 1000) + (session.expires_in || 3600)
+          localStorage.setItem('fluxen_session', JSON.stringify(session))
+          showApp(); return
+        }
+      }
+    }
+  } catch(e) {}
+  showLogin()
+}
+
+async function doLogin() {
+  var email = document.getElementById('l-email').value.trim()
+  var pass  = document.getElementById('l-pass').value
+  var err   = document.getElementById('login-err')
+  err.hidden = true
+  if (!email || !pass) { err.textContent = 'Preencha e-mail e senha.'; err.hidden = false; return }
+  try {
+    var r = await fetch(SB + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { apikey: KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, password: pass })
+    })
+    var d = await r.json()
+    if (!r.ok) { err.textContent = d.error_description || d.msg || 'E-mail ou senha inválidos.'; err.hidden = false; return }
+    session = d
+    session.expires_at = Math.floor(Date.now() / 1000) + (d.expires_in || 3600)
+    localStorage.setItem('fluxen_session', JSON.stringify(session))
+    showApp()
+  } catch(e) { err.textContent = 'Erro de conexão.'; err.hidden = false }
+}
+
+function logout() {
+  session = null
+  localStorage.removeItem('fluxen_session')
+  showLogin()
+}
+
+function showApp() {
+  document.getElementById('login-screen').hidden = true
+  load()
+}
+
+function showLogin() {
+  document.getElementById('login-screen').hidden = false
+  document.getElementById('l-email').value = ''
+  document.getElementById('l-pass').value = ''
+  document.getElementById('login-err').hidden = true
+}
 
 let leads = [], tarefas = [], tab = 'kanban', drag = null, pendLead = null, wasDrag = false
 
@@ -468,7 +562,7 @@ function esc(s) {
 
 async function sbFetch(path, opts) {
   opts = opts || {}
-  const r = await fetch(SB + '/rest/v1' + path, Object.assign({}, opts, { headers: Object.assign({}, H, opts.headers || {}) }))
+  const r = await fetch(SB + '/rest/v1' + path, Object.assign({}, opts, { headers: Object.assign({}, getH(), opts.headers || {}) }))
   if (!r.ok) { const e = await r.json().catch(function(){ return {} }); throw new Error(e.message || r.statusText) }
   return r.status === 204 || r.status === 201 ? null : r.json()
 }
@@ -583,7 +677,7 @@ async function confirmFechado() {
   try {
     var r = await fetch(EFN, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: KEY },
+      headers: Object.assign({ 'Content-Type': 'application/json' }, getH()),
       body: JSON.stringify({ lead_id: id, valor: valor })
     })
     var d = await r.json().catch(function(){ return {} })
@@ -933,5 +1027,5 @@ if ('serviceWorker' in navigator) {
     .catch(function(){})
 }
 
-load()
+checkSession()
 </script>
