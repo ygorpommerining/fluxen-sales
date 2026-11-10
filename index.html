@@ -694,7 +694,8 @@ function renderAgenda() {
         '<div class="tck' + (t.concluida ? ' done' : '') + '" onclick="toggleT(\'' + esc(t.id) + '\',' + !t.concluida + ')">' + (t.concluida ? '✓' : '') + '</div>' +
         '<div class="tinfo"><div class="ttit">' + esc(t.titulo) + '</div>' +
         '<div class="tlead">' + esc((lead && lead.nome) || t.lead_id) + '</div></div>' +
-        '<div class="thora">' + hora + '</div></div>'
+        '<div class="thora">' + hora + '</div>' +
+        '<button class="ico" style="color:var(--muted);flex-shrink:0" onclick="deleteT(\'' + esc(t.id) + '\')" title="Excluir">🗑</button></div>'
     }).join('')
     return '<div class="aday"><div class="adayh' + (isToday ? ' today' : '') + '">' + lbl + '</div>' + rows + '</div>'
   }).join('') : '<p style="color:var(--muted);font-size:13px">Nenhuma tarefa agendada.</p>'
@@ -713,6 +714,16 @@ function renderAgenda() {
     '<div class="fg-grp"><label class="fl">Data e hora</label>' +
     '<input type="datetime-local" class="fi" id="td"></div>' +
     '<button class="btnp" onclick="submitT()">Agendar</button></div></div>'
+}
+
+async function deleteT(id) {
+  if (!confirm('Excluir esta tarefa?')) return
+  try {
+    await sbFetch('/tarefas?id=eq.' + id, { method: 'DELETE', headers: { 'Prefer': 'return=minimal' } })
+    tarefas = tarefas.filter(function(x){ return x.id !== id })
+    renderAgenda()
+    toast('Tarefa excluída')
+  } catch(err) { toast('Erro ao excluir tarefa') }
 }
 
 async function toggleT(id, done) {
