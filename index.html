@@ -191,6 +191,31 @@ tr:hover td{background:var(--surface2)}
   </div>
 </div>
 
+<!-- Modal agendar tarefa -->
+<div id="aoverlay" class="moverlay" hidden onclick="if(event.target===this)closeAgendarModal()">
+  <div class="modal">
+    <h2>Agendar tarefa</h2>
+    <p id="a-lead-nome" style="font-weight:600;color:var(--fg)"></p>
+    <input type="hidden" id="a-lead-id">
+    <div class="fg-grp">
+      <label class="fl">Nome da tarefa</label>
+      <input type="text" class="fi" id="a-titulo" placeholder="Ex: Ligar para confirmar proposta">
+    </div>
+    <div class="fg-grp">
+      <label class="fl">Descrição</label>
+      <textarea class="fi" id="a-desc" rows="3" placeholder="Detalhes opcionais…" style="resize:vertical"></textarea>
+    </div>
+    <div class="fg-grp">
+      <label class="fl">Data e hora</label>
+      <input type="datetime-local" class="fi" id="a-data">
+    </div>
+    <div class="mact">
+      <button class="btns" onclick="closeAgendarModal()">Cancelar</button>
+      <button class="btnp" id="a-submit" onclick="submitAgendarModal()">📅 Agendar</button>
+    </div>
+  </div>
+</div>
+
 <div id="doverlay" class="moverlay" hidden onclick="if(event.target===this)closeDetail()">
   <div class="modal" style="max-width:440px;gap:0;padding:0;overflow:hidden">
     <div style="display:flex;align-items:flex-start;gap:12px;padding:20px 20px 16px;border-bottom:1px solid var(--border)">
@@ -650,11 +675,38 @@ async function submitT() {
 }
 
 function agendarPara(id) {
-  go('agenda')
-  setTimeout(function() {
-    var s = document.getElementById('tl')
-    if (s) s.value = id
-  }, 100)
+  var lead = leads.find(function(l){ return l.lead_id === id })
+  document.getElementById('a-lead-nome').textContent = lead ? (lead.nome || id) : id
+  document.getElementById('a-lead-id').value = id
+  document.getElementById('a-titulo').value = ''
+  document.getElementById('a-desc').value = ''
+  document.getElementById('a-data').value = ''
+  document.getElementById('aoverlay').hidden = false
+}
+
+function closeAgendarModal() {
+  document.getElementById('aoverlay').hidden = true
+}
+
+async function submitAgendarModal() {
+  var lid = document.getElementById('a-lead-id').value
+  var tit = document.getElementById('a-titulo').value.trim()
+  var desc = document.getElementById('a-desc').value.trim()
+  var dat = document.getElementById('a-data').value
+  if (!tit || !dat) { toast('Preencha nome e data'); return }
+  var btn = document.getElementById('a-submit')
+  btn.disabled = true
+  try {
+    await sbFetch('/tarefas', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ lead_id: lid, titulo: tit, descricao: desc || null, data_hora: new Date(dat).toISOString() })
+    })
+    closeAgendarModal()
+    toast('✓ Tarefa agendada')
+    load()
+  } catch(err) { toast('Erro ao agendar tarefa') }
+  finally { btn.disabled = false }
 }
 
 function render() {
@@ -681,9 +733,10 @@ function toast(msg) {
   setTimeout(function(){ el.classList.remove('on') }, 2600)
 }
 
-document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { closeModal(); closeDetail() } })
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { closeModal(); closeDetail(); closeAgendarModal() } })
 document.getElementById('moverlay').addEventListener('click', function(e){ if (e.target === this) closeModal() })
 document.getElementById('doverlay').addEventListener('click', function(e){ if (e.target === this) closeDetail() })
+document.getElementById('aoverlay').addEventListener('click', function(e){ if (e.target === this) closeAgendarModal() })
 
 load()
 </script>
